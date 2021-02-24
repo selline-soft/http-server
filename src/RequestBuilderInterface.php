@@ -51,9 +51,9 @@ interface RequestBuilderInterface
     ): ServerRequestInterface;
 
     /**
-     * Get parsed headers from ($_SERVER) array.
+     * Парсит заголоаки из массива $_SERVER.
      *
-     * @param array $server typically $_SERVER or similar structure
+     * @param array $server $_SERVER или аналогичная структура
      * @return array
      */
     public static function getHeadersFromServer(array $server): array;

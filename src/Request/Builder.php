@@ -1,6 +1,7 @@
 <?php
 namespace Selline\HttpServer\Request;
 
+use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -36,42 +37,59 @@ final class Builder implements RequestBuilderInterface
             $server['REQUEST_METHOD'] = 'GET';
         }
 
-        $headers = \function_exists('getallheaders') ? getallheaders() : static::getHeadersFromServer($_SERVER);
+        $headers = function_exists('getallheaders')
+            ? getallheaders()
+            : self::getHeadersFromServer($_SERVER);
 
         $post = null;
         if ('POST' === $this->getMethodFromEnv($server)) {
             foreach ($headers as $headerName => $headerValue) {
-                if ('content-type' !== \strtolower($headerName)) {
+                if ('content-type' !== strtolower($headerName)) {
                     continue;
                 }
-                if (\in_array(
-                    \strtolower(\trim(\explode(';', $headerValue, 2)[0])),
+                if (in_array(
+                    strtolower(trim(explode(';', $headerValue, 2)[0])),
                     ['application/x-www-form-urlencoded', 'multipart/form-data']
                 )) {
                     $post = $_POST;
-
                     break;
                 }
             }
         }
 
-        return $this->fromArrays($server, $headers, $_COOKIE, $_GET, $post, $_FILES, \fopen('php://input', 'r') ?: null);
+        return $this->fromArrays(
+            $server,
+            $headers,
+            $_COOKIE,
+            $_GET,
+            $post,
+            $_FILES,
+            fopen('php://input', 'r') ?: null
+        );
     }
 
     /**
      * {@inheritdoc}
      */
-    public function fromArrays(array $server, array $headers = [], array $cookie = [], array $get = [], ?array $post = null, array $files = [], $body = null): ServerRequestInterface
-    {
+    public function fromArrays(
+        array $server,
+        array $headers = [],
+        array $cookie = [],
+        array $get = [],
+        ?array $post = null,
+        array $files = [],
+        $body = null
+    ): ServerRequestInterface{
         $method = $this->getMethodFromEnv($server);
         $uri = $this->getUriFromEnvWithHTTP($server);
-        $protocol = isset($server['SERVER_PROTOCOL']) ? \str_replace('HTTP/', '', $server['SERVER_PROTOCOL']) : '1.1';
+
+        $protocol = isset($server['SERVER_PROTOCOL'])
+            ? str_replace('HTTP/', '', $server['SERVER_PROTOCOL'])
+            : '1.1';
 
         $serverRequest = $this->serverRequestFactory->createServerRequest($method, $uri, $server);
         foreach ($headers as $name => $value) {
-            // Because PHP automatically casts array keys set with numeric strings to integers, we have to make sure
-            // that numeric headers will not be sent along as integers, as withAddedHeader can only accept strings.
-            if (\is_int($name)) {
+            if (is_int($name)) {
                 $name = (string) $name;
             }
             $serverRequest = $serverRequest->withAddedHeader($name, $value);
@@ -88,47 +106,42 @@ final class Builder implements RequestBuilderInterface
             return $serverRequest;
         }
 
-        if (\is_resource($body)) {
+        if (is_resource($body)) {
             $body = $this->streamFactory->createStreamFromResource($body);
-        } elseif (\is_string($body)) {
+        } elseif (is_string($body)) {
             $body = $this->streamFactory->createStream($body);
         } elseif (!$body instanceof StreamInterface) {
-            throw new \InvalidArgumentException('The $body parameter to ServerRequestCreator::fromArrays must be string, resource or StreamInterface');
+            throw new InvalidArgumentException('The $body parameter to ServerRequestCreator::fromArrays must be string, resource or StreamInterface');
         }
 
         return $serverRequest->withBody($body);
     }
 
     /**
-     * Implementation from Zend\Diactoros\marshalHeadersFromSapi().
+     * @param array $server
+     * @return array
      */
     public static function getHeadersFromServer(array $server): array
     {
         $headers = [];
         foreach ($server as $key => $value) {
-            // Apache prefixes environment variables with REDIRECT_
-            // if they are added by rewrite rules
-            if (0 === \strpos($key, 'REDIRECT_')) {
-                $key = \substr($key, 9);
 
-                // We will not overwrite existing variables with the
-                // prefixed versions, though
-                if (\array_key_exists($key, $server)) {
+            if (str_starts_with($key, 'REDIRECT_')) {
+                $key = substr($key, 9);
+                if (array_key_exists($key, $server)) {
                     continue;
                 }
             }
 
-            if ($value && 0 === \strpos($key, 'HTTP_')) {
-                $name = \strtr(\strtolower(\substr($key, 5)), '_', '-');
+            if ($value && str_starts_with($key, 'HTTP_')) {
+                $name = strtr(strtolower(substr($key, 5)), '_', '-');
                 $headers[$name] = $value;
-
                 continue;
             }
 
-            if ($value && 0 === \strpos($key, 'CONTENT_')) {
-                $name = 'content-'.\strtolower(\substr($key, 8));
+            if ($value && str_starts_with($key, 'CONTENT_')) {
+                $name = 'content-' . strtolower(substr($key, 8));
                 $headers[$name] = $value;
-
                 continue;
             }
         }
@@ -139,7 +152,7 @@ final class Builder implements RequestBuilderInterface
     private function getMethodFromEnv(array $environment): string
     {
         if (false === isset($environment['REQUEST_METHOD'])) {
-            throw new \InvalidArgumentException('Cannot determine HTTP method');
+            throw new InvalidArgumentException('Cannot determine HTTP method');
         }
 
         return $environment['REQUEST_METHOD'];
@@ -162,7 +175,7 @@ final class Builder implements RequestBuilderInterface
      *
      * @return UploadedFileInterface[]
      *
-     * @throws \InvalidArgumentException for unrecognized values
+     * @throws InvalidArgumentException for unrecognized values
      */
     private function normalizeFiles(array $files): array
     {
@@ -176,7 +189,7 @@ final class Builder implements RequestBuilderInterface
             } elseif (\is_array($value)) {
                 $normalized[$key] = $this->normalizeFiles($value);
             } else {
-                throw new \InvalidArgumentException('Invalid value in files specification');
+                throw new InvalidArgumentException('Invalid value in files specification');
             }
         }
 
