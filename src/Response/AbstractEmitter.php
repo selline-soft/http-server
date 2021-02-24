@@ -3,9 +3,10 @@ namespace Selline\HttpServer\Response;
 
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
+use Selline\HttpServer\ResponseEmitterInterface;
 
 
-abstract class AbstractEmitter
+abstract class AbstractEmitter implements ResponseEmitterInterface
 {
     /**
      * Emit a response.
