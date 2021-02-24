@@ -22,11 +22,15 @@
     "selline-soft/http": ">=0.1.2",
     "vimeo/psalm": "^4.6",
     "phpunit/phpunit": "^9.5",
-    "nyholm/nsa": "^1.2"
+    "nyholm/nsa": "^1.2",
+    "phpspec/prophecy-phpunit": "^2.0"
   },
   "autoload-dev": {
     "psr-4": {
       "Selline\\HttpServer\\Tests\\": "tests"
-    }
+    },
+    "files": [
+      "tests/Response/Helpers/functions.php"
+    ]
   }
 }

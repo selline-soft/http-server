@@ -1,5 +1,6 @@
 <?php
 namespace Selline\HttpServer\Request;
+
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -10,6 +11,12 @@ use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Message\UriInterface;
 use Selline\HttpServer\RequestBuilderInterface;
 
+/**
+ * Class Builder
+ *
+ * @package Selline\HttpServer\Request
+ * @author Alexey Volkov <webwizardry@hotmail.com>
+ */
 final class Builder implements RequestBuilderInterface
 {
     public function __construct(

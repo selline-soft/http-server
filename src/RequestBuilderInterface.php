@@ -1,14 +1,21 @@
 <?php
 namespace Selline\HttpServer;
+
 use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 
-
+/**
+ * Interface RequestBuilderInterface
+ *
+ * @package Selline\HttpServer
+ * @author Alexey Volkov <webwizardry@hotmail.com>
+ */
 interface RequestBuilderInterface
 {
     /**
      * Создает новый объект запроса к серверу из текущих переменных среды.
+     *
      * По умолчанию используется запрос GET, чтобы минимизировать риск исключения \InvalidArgumentException.
      * Включает заголовки текущего запроса, предоставленные сервером через getallheaders().
      * Если getallheaders() недоступен на текущем сервере, будет использован собственный метод getHeadersFromServer().
